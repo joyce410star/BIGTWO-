@@ -2,73 +2,46 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>大老二：多人連線最終版</title>
+    <title>大老二：多人連線最終修正版</title>
     <style>
         :root { --bg: #0a0a0c; --neon: #00e676; --blue: #00e5ff; --red: #ff1744; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
-        
-        #game-container { 
-            width: 98%; max-width: 1100px; 
-            display: grid; 
-            grid-template-areas: ". p2 ." "p1 table p3" ". p0 ."; 
-            grid-gap: 20px; padding: 20px; margin-top: 10px;
-        }
-
-        .slot { background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(10px); border-radius: 20px; padding: 15px; text-align: center; border: 2px solid rgba(255,255,255,0.1); min-height: 160px; transition: 0.3s; }
-        .active { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 230, 118, 0.4); background: rgba(0, 230, 118, 0.05); }
-        
+        #game-container { width: 95%; max-width: 1100px; display: grid; grid-template-areas: ". p2 ." "p1 table p3" ". p0 ."; grid-gap: 20px; padding: 20px; }
+        .slot { background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(10px); border-radius: 20px; padding: 15px; text-align: center; border: 2px solid rgba(255,255,255,0.1); min-height: 150px; }
+        .active { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 230, 118, 0.4); }
         .p0 { grid-area: p0; } .p1 { grid-area: p1; } .p2 { grid-area: p2; } .p3 { grid-area: p3; }
-
-        #center-table { grid-area: table; background: radial-gradient(circle, #103525 0%, #050e0a 100%); border: 4px solid #333; border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 240px; box-shadow: inset 0 0 50px rgba(0,0,0,0.5); }
-        
+        #center-table { grid-area: table; background: radial-gradient(circle, #103525 0%, #050e0a 100%); border: 4px solid #333; border-radius: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 240px; }
         .hand { display: flex; justify-content: center; padding: 10px; min-height: 90px; }
-        .card { 
-            flex: 0 0 auto; width: 50px; height: 75px; background: white; color: black; border-radius: 8px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: space-around; 
-            font-size: 18px; font-weight: bold; box-shadow: -3px 0 8px rgba(0,0,0,0.4); 
-            cursor: pointer; border: 1px solid #ddd; margin-left: -25px; transition: transform 0.2s, margin 0.2s; 
-        }
+        .card { flex: 0 0 auto; width: 48px; height: 70px; background: white; color: black; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; font-size: 18px; font-weight: bold; box-shadow: -3px 0 8px rgba(0,0,0,0.4); cursor: pointer; border: 1px solid #ddd; margin-left: -25px; transition: 0.2s; }
         .hand .card:first-child { margin-left: 0; }
         .card.red { color: var(--red); }
-        .card.selected { transform: translateY(-25px); z-index: 100; border: 3px solid var(--neon); box-shadow: 0 0 15px var(--neon); }
-        .card.back { background: linear-gradient(135deg, #1a2a3a 0%, #0d151d 100%); color: transparent !important; border: 1px solid var(--blue); }
-        
-        #last-move .card { margin-left: 10px; cursor: default; transform: scale(1.1); box-shadow: 3px 3px 10px rgba(0,0,0,0.5); }
-        
-        .controls { margin-top: 15px; display: flex; gap: 15px; justify-content: center; }
-        button { padding: 10px 25px; border-radius: 12px; border: none; background: #ef6c00; color: white; font-weight: bold; cursor: pointer; font-size: 16px; box-shadow: 0 4px 0 #b35000; }
-        button:hover:not(:disabled) { background: #ff9800; transform: translateY(-2px); }
-        button:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
-        button:disabled { background: #444; box-shadow: none; opacity: 0.5; cursor: not-allowed; }
-        
-        #status-bar { background: rgba(0,0,0,0.85); padding: 10px 30px; border-radius: 30px; margin: 20px; border: 1px solid var(--blue); z-index: 100; font-size: 14px; letter-spacing: 1px; }
-        #table-info { font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .card.selected { transform: translateY(-25px); z-index: 100; border: 3px solid var(--neon); }
+        .card.back { background: #1a2a3a; color: transparent !important; border: 1px solid var(--blue); }
+        #last-move .card { margin-left: 8px; cursor: default; transform: scale(1.05); }
+        button { padding: 10px 25px; border-radius: 12px; border: none; background: #ef6c00; color: white; font-weight: bold; cursor: pointer; margin: 5px; }
+        button:disabled { background: #444; opacity: 0.5; }
+        #status-bar { background: rgba(0,0,0,0.85); padding: 10px 30px; border-radius: 30px; margin: 20px; border: 1px solid var(--blue); }
     </style>
 </head>
 <body>
     <canvas id="bg-canvas"></canvas>
-    <div id="status-bar">🛰️ 雲端同步系統：<span id="info-text">連線中...</span></div>
+    <div id="status-bar">🛰️ 狀態：<span id="info-text">連線中...</span></div>
 
     <div id="game-container">
         <div class="slot p2" id="ui-2">玩家 2 (0) <div class="hand"></div></div>
         <div class="slot p1" id="ui-1">玩家 1 (0) <div class="hand"></div></div>
-        
         <div id="center-table">
             <div id="last-move" class="hand"></div>
-            <div id="table-info" style="color:var(--neon);">等待房主開局</div>
-            <button id="start-btn" style="display:none; background: var(--blue); box-shadow: 0 4px 0 #0097a7;">開始遊戲</button>
-        </div>
-        
-        <div class="slot p3" id="ui-3">玩家 3 (0) <div class="hand"></div></div>
-        
-        <div class="slot p0" id="ui-0">
-            你是玩家 (0)
-            <div class="hand"></div>
-            <div class="controls">
-                <button id="play-btn" disabled>出牌</button>
-                <button id="pass-btn" disabled>Pass</button>
+            <div id="table-info" style="color:var(--neon); font-weight:bold;">等待玩家加入</div>
+            <div id="admin-controls">
+                <button id="start-btn" style="display:none; background: var(--blue);">開始新對局</button>
+                <button id="reset-btn" style="display:none; background: #d32f2f;">強制重置人數</button>
             </div>
+        </div>
+        <div class="slot p3" id="ui-3">玩家 3 (0) <div class="hand"></div></div>
+        <div class="slot p0" id="ui-0">你是玩家 (0) <div class="hand"></div>
+            <div class="controls"><button id="play-btn" disabled>出牌</button><button id="pass-btn" disabled>Pass</button></div>
         </div>
     </div>
 
@@ -91,38 +64,36 @@
     const gameRef = ref(db, 'game_room');
 
     let myIdx = -1;
-    let gameState = null;
     const SUITS = ['♣', '♦', '♥', '♠'], RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
 
-    // --- 核心牌型判斷 (與之前單機版一致) ---
-    function getCombo(cards) {
-        let len = cards.length;
-        if(len === 0) return null;
-        cards.sort((a,b) => a.power - b.power);
-        if(len === 1) return { type: 1, power: cards[0].power, name: "單張" };
-        if(len === 2 && cards[0].r === cards[1].r) return { type: 2, power: cards[1].power, name: "對子" };
-        if(len === 5) {
-            let counts = {}; cards.forEach(c => counts[c.r] = (counts[c.r] || 0) + 1);
-            let v = Object.values(counts).sort((a,b) => b-a);
-            let isS = true; for(let i=0; i<4; i++) if(cards[i+1].r - cards[i].r !== 1) isS = false;
-            let isF = cards.every(c => c.s === cards[0].s);
-            if(isS && isF) return { type: 6, power: cards[4].power, name: "同花順" };
-            if(v[0] === 4) return { type: 5, power: Object.keys(counts).find(k=>counts[k]===4)*4+3, name: "四條" };
-            if(v[0] === 3 && v[1] === 2) return { type: 4, power: Object.keys(counts).find(k=>counts[k]===3)*4+3, name: "葫蘆" };
-            if(isS) return { type: 3, power: cards[4].power, name: "順子" };
-        }
-        return null;
-    }
-
-    // 加入房間
+    // 加入房間與人數控制
     async function join() {
-        const res = await runTransaction(ref(db, 'game_room/players_count'), (c) => (c === null ? 0 : c + 1));
-        myIdx = res.snapshot.val() || 0;
-        document.getElementById('info-text').innerText = `已就緒，你是玩家 ${myIdx}`;
-        if(myIdx === 0) document.getElementById('start-btn').style.display = 'block';
+        const res = await runTransaction(ref(db, 'game_room/players_count'), (c) => {
+            if (c === null) return 0;
+            return c + 1;
+        });
+        myIdx = res.snapshot.val();
+        if (myIdx > 3) {
+            document.getElementById('info-text').innerText = `房間已滿 (你是觀察者)`;
+            myIdx = 99; // 觀察者
+        } else {
+            document.getElementById('info-text').innerText = `連線成功！你是玩家 ${myIdx}`;
+            if(myIdx === 0) {
+                document.getElementById('start-btn').style.display = 'inline-block';
+                document.getElementById('reset-btn').style.display = 'inline-block';
+            }
+        }
     }
 
-    // 發牌
+    // 強制重置按鈕 (修復玩家 4 的問題)
+    document.getElementById('reset-btn').onclick = () => {
+        if(confirm("確定要重置所有玩家人數嗎？這會把房間清空。")) {
+            set(gameRef, { players_count: 0, status: 'waiting' });
+            location.reload();
+        }
+    };
+
+    // 開始遊戲 (徹底初始化資料)
     document.getElementById('start-btn').onclick = () => {
         let d = []; for(let r=0; r<13; r++) for(let s=0; s<4; s++) d.push({s, r, suit:SUITS[s], rank:RANKS[r], power:r*4+s});
         d.sort(() => Math.random() - 0.5);
@@ -131,21 +102,22 @@
             h[i] = d.slice(i*13, (i+1)*13).sort((a,b) => a.power - b.power);
             if(h[i].some(c => c.s===0 && c.r===0)) t = i;
         }
-        set(gameRef, { hands: h, lastMove: [], turn: t, passCount: 0, status: 'playing', players_count: 3 });
+        update(gameRef, { hands: h, lastMove: [], turn: t, passCount: 0, status: 'playing' });
     };
 
     onValue(gameRef, (s) => {
-        gameState = s.val();
-        if(gameState && gameState.status === 'playing') render();
+        const state = s.val();
+        if(state && state.status === 'playing') render(state);
     });
 
-    function render() {
+    function render(state) {
+        if (myIdx === 99) return; // 觀察者不渲染個人手牌
         for (let i = 0; i < 4; i++) {
             let pos = (i - myIdx + 4) % 4;
             const ui = document.getElementById(`ui-${pos}`);
-            const handDiv = ui.querySelector('.hand');
-            const h = gameState.hands[i] || [];
+            const h = state.hands[i] || [];
             ui.childNodes[0].textContent = (i === myIdx ? `你是玩家 ${i}` : `玩家 ${i}`) + ` (${h.length})`;
+            const handDiv = ui.querySelector('.hand');
             handDiv.innerHTML = '';
             h.forEach(c => {
                 const d = document.createElement('div');
@@ -156,56 +128,45 @@
                 } else { d.className = `card back`; }
                 handDiv.appendChild(d);
             });
-            ui.classList.toggle('active', gameState.turn === i);
+            ui.classList.toggle('active', state.turn === i);
         }
-
         const table = document.getElementById('last-move');
         table.innerHTML = '';
-        (gameState.lastMove || []).forEach(c => {
+        (state.lastMove || []).forEach(c => {
             const d = document.createElement('div');
             d.className = `card ${c.s===1||c.s===2?'red':''}`;
             d.innerHTML = `<span>${c.suit}</span><span>${c.rank}</span><span>${c.suit}</span>`;
             table.appendChild(d);
         });
-
-        const combo = getCombo(gameState.lastMove || []);
-        const isMyTurn = gameState.turn === myIdx;
-        document.getElementById('play-btn').disabled = !isMyTurn;
-        document.getElementById('pass-btn').disabled = (!isMyTurn || !gameState.lastMove || gameState.lastMove.length === 0);
-        document.getElementById('table-info').innerText = isMyTurn ? "★ 輪到你了 ★" : (combo ? `${combo.name} 盤面` : "等待出牌");
+        const isTurn = state.turn === myIdx;
+        document.getElementById('play-btn').disabled = !isTurn;
+        document.getElementById('pass-btn').disabled = (!isTurn || !state.lastMove || state.lastMove.length === 0);
+        document.getElementById('table-info').innerText = isTurn ? "★ 輪到你了 ★" : `等待玩家 ${state.turn}...`;
     }
 
+    // 出牌動作
     document.getElementById('play-btn').onclick = () => {
-        const selIdx = [];
-        document.querySelectorAll('#ui-0 .card').forEach((el, i) => { if(el.classList.contains('selected')) selIdx.push(i); });
-        const selected = selIdx.map(i => gameState.hands[myIdx][i]);
-        const moveC = getCombo(selected);
-        const lastC = getCombo(gameState.lastMove || []);
-
-        if(!moveC) return alert("不合法的牌型");
-        if(gameState.lastMove && gameState.lastMove.length > 0) {
-            if(selected.length !== gameState.lastMove.length) return alert("張數不符");
-            if(moveC.type < lastC.type || (moveC.type === lastC.type && moveC.power <= lastC.power)) return alert("牌型太小");
-        }
-
-        let newH = [...gameState.hands];
-        newH[myIdx] = newH[myIdx].filter((_, i) => !selIdx.includes(i));
-        
-        if(newH[myIdx].length === 0) {
-            alert("你贏了！遊戲結束");
-            set(gameRef, null);
-            location.reload();
-            return;
-        }
-
-        update(gameRef, { hands: newH, lastMove: selected, turn: (gameState.turn + 1) % 4, passCount: 0 });
+        onValue(gameRef, (s) => {
+            const state = s.val();
+            const selIdx = [];
+            document.querySelectorAll('#ui-0 .card').forEach((el, i) => { if(el.classList.contains('selected')) selIdx.push(i); });
+            const selected = selIdx.map(i => state.hands[myIdx][i]);
+            if (selected.length > 0) {
+                let newH = [...state.hands];
+                newH[myIdx] = newH[myIdx].filter((_, i) => !selIdx.includes(i));
+                update(gameRef, { hands: newH, lastMove: selected, turn: (state.turn + 1) % 4, passCount: 0 });
+            }
+        }, { onlyOnce: true });
     };
 
     document.getElementById('pass-btn').onclick = () => {
-        let pc = (gameState.passCount || 0) + 1;
-        let lm = gameState.lastMove;
-        if(pc >= 3) { lm = []; pc = 0; }
-        update(gameRef, { turn: (gameState.turn + 1) % 4, passCount: pc, lastMove: lm });
+        onValue(gameRef, (s) => {
+            const state = s.val();
+            let pc = (state.passCount || 0) + 1;
+            let lm = state.lastMove;
+            if(pc >= 3) { lm = []; pc = 0; }
+            update(gameRef, { turn: (state.turn + 1) % 4, passCount: pc, lastMove: lm });
+        }, { onlyOnce: true });
     };
 
     join();
