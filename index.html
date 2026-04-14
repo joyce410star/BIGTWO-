@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大老二：多人連線完整版</title>
+    <title>大老二：終極完美版</title>
     <style>
         :root { --bg: #0a0a0c; --neon: #00e676; --blue: #00e5ff; --red: #ff1744; }
         body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
-        #game-container { width: 98%; max-width: 800px; display: grid; grid-template-areas: ". p2 ." "p1 table p3" ". p0 ."; grid-gap: 10px; padding: 10px; margin-top: 5px; }
-        .slot { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 15px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); min-height: 110px; }
+        #game-container { width: 98%; max-width: 850px; display: grid; grid-template-areas: ". p2 ." "p1 table p3" ". p0 ."; grid-gap: 10px; padding: 10px; margin-top: 5px; }
+        .slot { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 15px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); min-height: 110px; position: relative; }
         .active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 230, 118, 0.3); background: rgba(0, 230, 118, 0.05); }
         .p0 { grid-area: p0; } .p1 { grid-area: p1; } .p2 { grid-area: p2; } .p3 { grid-area: p3; }
-        #center-table { grid-area: table; background: radial-gradient(circle, #0e2f1f 0%, #050e0a 100%); border: 3px solid #444; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px; }
+        #center-table { grid-area: table; background: radial-gradient(circle, #0e2f1f 0%, #050e0a 100%); border: 3px solid #333; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px; }
         .hand { display: flex; justify-content: center; padding: 5px; min-height: 60px; }
         .card { flex: 0 0 auto; width: 35px; height: 50px; background: white; color: black; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; font-size: 13px; font-weight: bold; box-shadow: -2px 0 5px rgba(0,0,0,0.4); cursor: pointer; border: 1px solid #ddd; margin-left: -18px; transition: 0.2s; }
         .hand .card:first-child { margin-left: 0; }
         .card.red { color: var(--red); }
         .card.selected { transform: translateY(-15px); z-index: 100; border: 2px solid var(--neon); box-shadow: 0 0 10px var(--neon); }
-        .card.back { background: linear-gradient(135deg, #1a2a3a 0%, #0d151d 100%); border: 1px solid var(--blue); }
-        #last-move .card { margin-left: 5px; transform: scale(1.1); cursor: default; }
+        .card.back { background: linear-gradient(135deg, #1a2a3a 0%, #0d151d 100%); color: transparent !important; border: 1px solid var(--blue); }
+        #last-move .card { margin-left: 5px; transform: scale(1.1); }
         .controls { margin-top: 5px; display: flex; gap: 8px; justify-content: center; }
-        button { padding: 6px 15px; border-radius: 8px; border: none; background: #ef6c00; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        button { padding: 5px 12px; border-radius: 6px; border: none; background: #ef6c00; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
         button:disabled { background: #444; opacity: 0.5; }
         #status-bar { background: rgba(0,0,0,0.8); padding: 5px 20px; border-radius: 20px; margin: 10px; border: 1px solid var(--blue); font-size: 12px; }
     </style>
@@ -31,15 +31,15 @@
     <div id="status-bar">🛰️ <span id="info-text">連線中...</span></div>
 
     <div id="game-container">
-        <div class="slot p2" id="ui-2">玩家 2 <div class="hand"></div></div>
-        <div class="slot p1" id="ui-1">玩家 1 <div class="hand"></div></div>
+        <div class="slot p2" id="ui-2">玩家 2 (0) <div class="hand"></div></div>
+        <div class="slot p1" id="ui-1">玩家 1 (0) <div class="hand"></div></div>
         <div id="center-table">
             <div id="last-move" class="hand"></div>
-            <div id="table-info" style="color:var(--neon); font-size:12px;">準備開局</div>
+            <div id="table-info" style="color:var(--neon); font-size:11px;">準備開局</div>
             <button id="start-btn" style="display:none; background: var(--blue);">開始遊戲</button>
             <button id="reset-btn" style="background: var(--red); font-size: 10px; margin-top: 5px;">重置房間</button>
         </div>
-        <div class="slot p3" id="ui-3">玩家 3 <div class="hand"></div></div>
+        <div class="slot p3" id="ui-3">玩家 3 (0) <div class="hand"></div></div>
         <div class="slot p0" id="ui-0">你是玩家 <div class="hand"></div>
             <div class="controls"><button id="play-btn" disabled>出牌</button><button id="pass-btn" disabled>Pass</button></div>
         </div>
@@ -66,23 +66,18 @@
     let myIdx = -1;
     const SUITS = ['♣', '♦', '♥', '♠'], RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
 
-    // --- 完整牌型判定邏輯 ---
+    // --- 核心規則判斷 (完全版) ---
     function getCombo(cards) {
         if (!cards || cards.length === 0) return null;
         const sorted = [...cards].sort((a,b) => a.power - b.power);
         const len = sorted.length;
-        
         if (len === 1) return { type: 1, power: sorted[0].power, name: "單張" };
         if (len === 2 && sorted[0].r === sorted[1].r) return { type: 2, power: sorted[1].power, name: "對子" };
-        
         if (len === 5) {
             const counts = {}; sorted.forEach(c => counts[c.r] = (counts[c.r] || 0) + 1);
             const v = Object.values(counts).sort((a,b) => b-a);
             const isFlush = sorted.every(c => c.s === sorted[0].s);
-            let isStraight = true;
-            for(let i=0; i<4; i++) { if(sorted[i+1].r - sorted[i].r !== 1) isStraight = false; }
-            // 處理 A,2,3,4,5 順子 (大老二特殊規則可選)
-            
+            let isStraight = true; for(let i=0; i<4; i++) { if(sorted[i+1].r - sorted[i].r !== 1) isStraight = false; }
             if (isStraight && isFlush) return { type: 6, power: sorted[4].power, name: "同花順" };
             if (v[0] === 4) return { type: 5, power: parseInt(Object.keys(counts).find(k=>counts[k]===4))*4+3, name: "鐵支" };
             if (v[0] === 3 && v[1] === 2) return { type: 4, power: parseInt(Object.keys(counts).find(k=>counts[k]===3))*4+3, name: "葫蘆" };
@@ -94,8 +89,8 @@
 
     async function join() {
         const res = await runTransaction(ref(db, 'game_room/players_count'), (c) => (c === null || c >= 4 ? 0 : c + 1));
-        myIdx = res.snapshot.val() || 0;
-        document.getElementById('info-text').innerText = `你是玩家 ${myIdx}`;
+        myIdx = res.snapshot.val() === null ? 0 : res.snapshot.val();
+        document.getElementById('info-text').innerText = `已就緒！你是玩家 ${myIdx}`;
         if(myIdx === 0) {
             document.getElementById('start-btn').style.display = 'block';
             update(gameRef, { status: 'waiting' });
@@ -115,7 +110,7 @@
             h[i] = d.slice(i*13, (i+1)*13).sort((a,b) => a.power - b.power);
             if(h[i].some(c => c.s===0 && c.r===0)) t = i;
         }
-        update(gameRef, { hands: h, lastMove: [], turn: t, passCount: 0, status: 'playing', isFirstRound: true });
+        update(gameRef, { hands: h, lastMove: [], turn: t, passCount: 0, status: 'playing', isFirst: true });
         document.getElementById('start-btn').style.display = 'none';
     };
 
@@ -163,35 +158,25 @@
             const selIdx = [];
             document.querySelectorAll('#ui-0 .card').forEach((el, i) => { if(el.classList.contains('selected')) selIdx.push(i); });
             const selected = selIdx.map(i => state.hands[myIdx][i]);
-            
             const moveC = getCombo(selected);
             const lastC = getCombo(state.lastMove || []);
 
-            // --- 嚴格規則判斷 ---
             if (!moveC) return alert("不合法的牌型！");
-            
-            // 首輪必須包含梅花 3
-            if (state.isFirstRound && !selected.some(c => c.s === 0 && c.r === 0)) return alert("首盤第一手必須包含梅花 3！");
-
+            if (state.isFirst && !selected.some(c => c.s === 0 && c.r === 0)) return alert("第一手必須包含梅花 3！");
             if (state.lastMove && state.lastMove.length > 0) {
                 if (selected.length !== state.lastMove.length) return alert(`必須出 ${state.lastMove.length} 張牌！`);
-                
-                // 比牌型等級
-                if (moveC.type < lastC.type) return alert("牌型等級不夠！");
-                if (moveC.type === lastC.type && moveC.power <= lastC.power) return alert("點數/花色太小！");
+                if (moveC.type < lastC.type || (moveC.type === lastC.type && moveC.power <= lastC.power)) return alert("牌型太小或不符！");
             }
 
             let newH = [...state.hands];
             newH[myIdx] = newH[myIdx].filter((_, i) => !selIdx.includes(i));
-            
             if (newH[myIdx].length === 0) {
                 alert("你贏了！");
                 set(gameRef, { players_count: 0, status: 'waiting' });
                 location.reload();
                 return;
             }
-
-            update(gameRef, { hands: newH, lastMove: selected, turn: (state.turn + 1) % 4, passCount: 0, isFirstRound: false });
+            update(gameRef, { hands: newH, lastMove: selected, turn: (state.turn + 1) % 4, passCount: 0, isFirst: false });
         }, { onlyOnce: true });
     };
 
