@@ -3,75 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大老二：多人連線終極版</title>
+    <title>大老二：多人連線修正版</title>
     <style>
         :root { --bg: #0a0a0c; --neon: #00e676; --blue: #00e5ff; --red: #ff1744; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
-        
-        /* 粒子背景 */
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.2; }
-        
-        #game-container { 
-            width: 98%; max-width: 900px; 
-            display: grid; 
-            grid-template-areas: ". p2 ." "p1 table p3" ". p0 ."; 
-            grid-gap: 10px; padding: 10px; margin-top: 5px;
-        }
-
-        .slot { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 15px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); min-height: 120px; position: relative; }
-        .active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 230, 118, 0.3); background: rgba(0, 230, 118, 0.03); }
-        
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow: hidden; }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; }
+        #game-container { width: 98%; max-width: 850px; display: grid; grid-template-areas: ". p2 ." "p1 table p3" ". p0 ."; grid-gap: 10px; padding: 10px; margin-top: 5px; }
+        .slot { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 15px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); min-height: 110px; position: relative; }
+        .active { border-color: var(--neon); box-shadow: 0 0 15px rgba(0, 230, 118, 0.3); }
         .p0 { grid-area: p0; } .p1 { grid-area: p1; } .p2 { grid-area: p2; } .p3 { grid-area: p3; }
-
-        #center-table { grid-area: table; background: radial-gradient(circle, #0e2f1f 0%, #050e0a 100%); border: 3px solid #333; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; }
-        
-        .hand { display: flex; justify-content: center; padding: 5px; min-height: 70px; }
-        
-        /* 修正卡牌大小，確保不超出螢幕 */
-        .card { 
-            flex: 0 0 auto; width: 38px; height: 55px; background: white; color: black; border-radius: 5px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: space-around; 
-            font-size: 14px; font-weight: bold; box-shadow: -2px 0 5px rgba(0,0,0,0.4); 
-            cursor: pointer; border: 1px solid #ddd; margin-left: -20px; transition: 0.2s; 
-        }
+        #center-table { grid-area: table; background: radial-gradient(circle, #0e2f1f 0%, #050e0a 100%); border: 3px solid #333; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px; }
+        .hand { display: flex; justify-content: center; padding: 5px; min-height: 60px; }
+        .card { flex: 0 0 auto; width: 35px; height: 50px; background: white; color: black; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; font-size: 13px; font-weight: bold; box-shadow: -2px 0 5px rgba(0,0,0,0.4); cursor: pointer; border: 1px solid #ddd; margin-left: -18px; transition: 0.2s; }
         .hand .card:first-child { margin-left: 0; }
         .card.red { color: var(--red); }
-        .card.selected { transform: translateY(-15px); z-index: 100; border: 2px solid var(--neon); box-shadow: 0 0 10px var(--neon); }
+        .card.selected { transform: translateY(-15px); z-index: 100; border: 2px solid var(--neon); }
         .card.back { background: linear-gradient(135deg, #1a2a3a 0%, #0d151d 100%); color: transparent !important; border: 1px solid var(--blue); }
-        
-        #last-move .card { margin-left: 5px; transform: scale(1.1); cursor: default; }
-        
-        .controls { margin-top: 5px; display: flex; gap: 10px; justify-content: center; }
-        button { padding: 6px 15px; border-radius: 8px; border: none; background: #ef6c00; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
-        button:disabled { background: #444; opacity: 0.5; cursor: not-allowed; }
-        
-        #status-bar { background: rgba(0,0,0,0.8); padding: 8px 20px; border-radius: 20px; margin: 10px; border: 1px solid var(--blue); font-size: 13px; }
-        #table-info { font-size: 12px; margin-bottom: 5px; font-weight: bold; }
+        #last-move .card { margin-left: 5px; transform: scale(1.1); }
+        .controls { margin-top: 5px; display: flex; gap: 8px; justify-content: center; }
+        button { padding: 5px 12px; border-radius: 6px; border: none; background: #ef6c00; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        button:disabled { background: #444; opacity: 0.5; }
+        #status-bar { background: rgba(0,0,0,0.8); padding: 5px 20px; border-radius: 20px; margin: 10px; border: 1px solid var(--blue); font-size: 12px; }
     </style>
 </head>
 <body>
     <canvas id="bg-canvas"></canvas>
-    <div id="status-bar">🛰️ <span id="info-text">連線中...</span></div>
+    <div id="status-bar">🛰️ <span id="info-text">載入中...</span></div>
 
     <div id="game-container">
         <div class="slot p2" id="ui-2">玩家 2 (0) <div class="hand"></div></div>
         <div class="slot p1" id="ui-1">玩家 1 (0) <div class="hand"></div></div>
-        
         <div id="center-table">
             <div id="last-move" class="hand"></div>
-            <div id="table-info" style="color:var(--neon);">等待房主開局</div>
+            <div id="table-info" style="color:var(--neon); font-size:11px;">等待開局</div>
             <button id="start-btn" style="display:none; background: var(--blue);">開始遊戲</button>
+            <button id="reset-btn" style="background: #d32f2f; font-size: 10px; margin-top: 5px;">強制清空房間</button>
         </div>
-        
         <div class="slot p3" id="ui-3">玩家 3 (0) <div class="hand"></div></div>
-        
-        <div class="slot p0" id="ui-0">
-            你是玩家 (0)
-            <div class="hand"></div>
-            <div class="controls">
-                <button id="play-btn" disabled>出牌</button>
-                <button id="pass-btn" disabled>Pass</button>
-            </div>
+        <div class="slot p0" id="ui-0">你是玩家 <div class="hand"></div>
+            <div class="controls"><button id="play-btn" disabled>出牌</button><button id="pass-btn" disabled>Pass</button></div>
         </div>
     </div>
 
@@ -96,15 +66,26 @@
     let myIdx = -1;
     const SUITS = ['♣', '♦', '♥', '♠'], RANKS = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
 
-    // 1. 加入房間
+    // 1. 加入房間 (增加自動重置邏輯)
     async function join() {
-        const res = await runTransaction(ref(db, 'game_room/players_count'), (c) => (c === null ? 0 : c + 1));
+        const res = await runTransaction(ref(db, 'game_room/players_count'), (c) => {
+            if (c === null || c >= 4) return 0; // 超過 4 人自動重啟為 0
+            return c + 1;
+        });
         myIdx = res.snapshot.val() || 0;
         document.getElementById('info-text').innerText = `已就緒！你是玩家 ${myIdx}`;
         if(myIdx === 0) document.getElementById('start-btn').style.display = 'block';
     }
 
-    // 2. 玩家 0 洗牌發牌
+    // 強制重置按鈕
+    document.getElementById('reset-btn').onclick = () => {
+        if(confirm("確定要清空房間嗎？")) {
+            set(gameRef, { players_count: 0, status: 'waiting' });
+            location.reload();
+        }
+    };
+
+    // 2. 玩家 0 洗牌
     document.getElementById('start-btn').onclick = () => {
         let d = []; for(let r=0; r<13; r++) for(let s=0; s<4; s++) d.push({s, r, suit:SUITS[s], rank:RANKS[r], power:r*4+s});
         d.sort(() => Math.random() - 0.5);
@@ -114,25 +95,20 @@
             if(h[i].some(c => c.s===0 && c.r===0)) t = i;
         }
         update(gameRef, { hands: h, lastMove: [], turn: t, passCount: 0, status: 'playing' });
-        document.getElementById('start-btn').style.display = 'none';
     };
 
-    // 3. 監聽數據
     onValue(gameRef, (s) => {
-        const gameState = s.val();
-        if(gameState && gameState.status === 'playing') render(gameState);
+        const state = s.val();
+        if(state && state.status === 'playing') render(state);
     });
 
     function render(state) {
         for (let i = 0; i < 4; i++) {
-            // 計算 UI 位置 (0=下, 1=左, 2=上, 3=右)
             let pos = (i - myIdx + 4) % 4;
             const ui = document.getElementById(`ui-${pos}`);
-            const handDiv = ui.querySelector('.hand');
             const h = state.hands[i] || [];
-            
             ui.childNodes[0].textContent = (i === myIdx ? `你是玩家 ${i}` : `玩家 ${i}`) + ` (${h.length})`;
-            
+            const handDiv = ui.querySelector('.hand');
             handDiv.innerHTML = '';
             h.forEach(c => {
                 const d = document.createElement('div');
@@ -145,7 +121,6 @@
             });
             ui.classList.toggle('active', state.turn === i);
         }
-
         const table = document.getElementById('last-move');
         table.innerHTML = '';
         (state.lastMove || []).forEach(c => {
@@ -154,13 +129,12 @@
             d.innerHTML = `<span>${c.suit}</span><span>${c.rank}</span><span>${c.suit}</span>`;
             table.appendChild(d);
         });
-
         const isTurn = state.turn === myIdx;
         document.getElementById('play-btn').disabled = !isTurn;
         document.getElementById('pass-btn').disabled = (!isTurn || !state.lastMove || state.lastMove.length === 0);
-        document.getElementById('table-info').innerText = isTurn ? "★ 輪到你了 ★" : `等待玩家 ${state.turn}...`;
     }
 
+    // 出牌
     document.getElementById('play-btn').onclick = () => {
         onValue(gameRef, (s) => {
             const state = s.val();
@@ -184,20 +158,6 @@
             update(gameRef, { turn: (state.turn + 1) % 4, passCount: pc, lastMove: lm });
         }, { onlyOnce: true });
     };
-
-    // 背景動畫
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let pts = [];
-    function rs() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.onresize = rs; rs();
-    for(let i=0; i<40; i++) pts.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, s:Math.random()*0.5+0.1});
-    function draw() {
-        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "#00e5ff";
-        pts.forEach(p => { p.y += p.s; if(p.y > canvas.height) p.y=0; ctx.fillRect(p.x, p.y, 1, 1); });
-        requestAnimationFrame(draw);
-    }
-    draw();
 
     join();
 </script>
